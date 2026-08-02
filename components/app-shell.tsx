@@ -5,6 +5,7 @@
 // PC: 左サイドバー固定 / スマートフォン: ハンバーガー開閉
 // ============================================================
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -73,9 +74,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* ---------- モバイル用ヘッダー ---------- */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-ink-200 bg-white px-4 py-3 lg:hidden">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-md bg-accent text-[13px] font-bold text-white">
-            J
-          </span>
+          <Image
+            src="/logo.jpg"
+            alt="日本株分析システム"
+            width={28}
+            height={28}
+            priority
+            className="h-7 w-7 shrink-0 rounded-md object-cover object-top"
+          />
           <span className="text-[14px] font-bold tracking-tight text-ink-900">
             日本株分析システム
           </span>
@@ -101,9 +107,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {/* ---------- PC用サイドバー ---------- */}
         <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-ink-200 bg-white px-4 py-5 lg:flex">
           <Link href="/dashboard" className="mb-7 flex items-center gap-2.5 px-2">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-[15px] font-bold text-white">
-              J
-            </span>
+            <Image
+              src="/logo.jpg"
+              alt="日本株分析システム"
+              width={36}
+              height={36}
+              priority
+              className="h-9 w-9 shrink-0 rounded-lg object-cover object-top"
+            />
             <span>
               <span className="block text-[14.5px] font-bold leading-tight tracking-tight text-ink-900">
                 日本株分析システム

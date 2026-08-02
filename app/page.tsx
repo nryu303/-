@@ -4,6 +4,7 @@
 // 本番実装では Supabase Auth(メール認証 + 2要素認証)を使用します。
 // ============================================================
 
+import Image from "next/image";
 import Link from "next/link";
 import { inputClass } from "@/components/ui";
 
@@ -22,9 +23,14 @@ export default function LoginPage() {
       <div className="flex flex-col justify-center bg-ink-950 px-8 py-12 text-white sm:px-12 lg:px-16">
         <div className="mx-auto w-full max-w-lg">
           <div className="mb-8 flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent text-lg font-bold">
-              J
-            </span>
+            <Image
+              src="/logo.jpg"
+              alt="日本株分析システム"
+              width={44}
+              height={44}
+              priority
+              className="h-11 w-11 shrink-0 rounded-xl object-cover object-top"
+            />
             <div>
               <p className="text-[15px] font-bold leading-tight">日本株分析システム</p>
               <p className="text-[12px] text-ink-400">J-Quants Premium 連携</p>

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -iE '\\\\.\\(png|jpg|jpeg|gif|webp|svg\\)$')",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Project\\\\Test\\\\public\")",
+      "PowerShell(Move-Item \"c:\\\\Project\\\\Test\\\\cf2b1658e69d1c142f1b4519864cd1b6.jpg\" \"c:\\\\Project\\\\Test\\\\public\\\\logo.jpg\" -Force)",
+      "PowerShell(npm run build 2>&1)"
+    ]
+  }
+}
