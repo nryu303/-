@@ -1,12 +1,23 @@
+"use client";
+
 // ============================================================
-// ログイン画面(要件7: ログイン認証)
-// デモのため認証は行わず、ボタンでダッシュボードへ遷移します。
-// 本番実装では Supabase Auth(メール認証 + 2要素認証)を使用します。
+// エントリー画面
+//
+//   1. フルスクリーンのイントロ(動画 or コード描画背景)
+//   2. 「システムに入る」でログイン画面へ
+//   3. ログイン成功でダッシュボードへ
+//
+// デモのため認証は行わず、入力があればログインできます。
+// 本番実装では Supabase Auth に置き換わります。
 // ============================================================
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import IntroScreen from "@/components/intro-screen";
 import { inputClass } from "@/components/ui";
+import { session } from "@/lib/session";
 
 const HIGHLIGHTS = [
   { spec: "要件1・2", label: "データ基盤", text: "J-Quants Premium から毎営業日自動でデータを蓄積" },
@@ -16,12 +27,59 @@ const HIGHLIGHTS = [
   { spec: "要件8", label: "外部連携", text: "分析AI向けの読み取り専用REST API" },
 ];
 
-export default function LoginPage() {
+export default function EntryPage() {
+  const router = useRouter();
+
+  // イントロ表示の判定はマウント後に行う(SSRとの不一致を防ぐため)
+  const [ready, setReady] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+
+  const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("demopassword");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setShowIntro(!session.introSeen());
+    setReady(true);
+  }, []);
+
+  const finishIntro = () => {
+    session.markIntroSeen();
+    setShowIntro(false);
+  };
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError("メールアドレスとパスワードを入力してください。");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    // 認証処理の待ち時間を再現
+    window.setTimeout(() => {
+      session.login(email.trim());
+      router.push("/dashboard");
+    }, 700);
+  };
+
+  if (!ready) {
+    return <div className="min-h-screen bg-[#0a0e17]" />;
+  }
+
+  if (showIntro) {
+    return <IntroScreen onEnter={finishIntro} />;
+  }
+
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* ---------- 左: 説明パネル ---------- */}
-      <div className="flex flex-col justify-center bg-ink-950 px-8 py-12 text-white sm:px-12 lg:px-16">
-        <div className="mx-auto w-full max-w-lg">
+      <div className="relative flex flex-col justify-center overflow-hidden bg-ink-950 px-8 py-12 text-white sm:px-12 lg:px-16">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-rose-500/10 blur-3xl" />
+
+        <div className="relative mx-auto w-full max-w-lg">
           <div className="mb-8 flex items-center gap-3">
             <Image
               src="/logo.jpg"
@@ -65,12 +123,20 @@ export default function LoginPage() {
               </li>
             ))}
           </ul>
+
+          <button
+            type="button"
+            onClick={() => setShowIntro(true)}
+            className="mt-8 text-[12px] text-ink-400 underline-offset-4 transition hover:text-white hover:underline"
+          >
+            ← イントロをもう一度見る
+          </button>
         </div>
       </div>
 
       {/* ---------- 右: ログインフォーム ---------- */}
       <div className="flex flex-col justify-center bg-white px-8 py-12 sm:px-12 lg:px-16">
-        <div className="mx-auto w-full max-w-sm">
+        <form onSubmit={submit} className="mx-auto w-full max-w-sm">
           <h2 className="text-xl font-bold tracking-tight text-ink-900">
             管理画面にログイン
           </h2>
@@ -85,8 +151,9 @@ export default function LoginPage() {
               </span>
               <input
                 type="email"
-                defaultValue="admin@example.com"
-                readOnly
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
                 className={inputClass}
               />
             </label>
@@ -97,8 +164,9 @@ export default function LoginPage() {
               </span>
               <input
                 type="password"
-                defaultValue="demopassword"
-                readOnly
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 className={inputClass}
               />
             </label>
@@ -107,7 +175,6 @@ export default function LoginPage() {
               <input
                 type="checkbox"
                 defaultChecked
-                readOnly
                 className="h-3.5 w-3.5 rounded border-ink-300 text-accent"
               />
               <span className="text-[12.5px] text-ink-600">
@@ -115,20 +182,29 @@ export default function LoginPage() {
               </span>
             </label>
 
-            <Link
-              href="/dashboard"
-              className="mt-2 flex w-full items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-[13.5px] font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            {error && (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-[12.5px] text-red-700">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-[13.5px] font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
             >
-              ログイン
-            </Link>
+              {loading && (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              )}
+              {loading ? "認証しています…" : "ログイン"}
+            </button>
           </div>
 
           <div className="mt-7 rounded-lg border border-ink-200 bg-ink-50 px-4 py-3">
             <p className="text-[12px] leading-relaxed text-ink-500">
               <span className="font-semibold text-ink-700">デモ版について</span>
               <br />
-              画面と操作の流れをご確認いただくためのデモです。認証は行わず、
-              「ログイン」を押すとそのまま管理画面へ進みます。表示されるデータはすべてサンプルです。
+              画面と操作の流れをご確認いただくためのデモです。認証は行わず、入力があればそのまま管理画面へ進みます。表示されるデータはすべてサンプルです。
             </p>
           </div>
 
@@ -139,7 +215,7 @@ export default function LoginPage() {
             </Link>{" "}
             でご覧いただけます。
           </p>
-        </div>
+        </form>
       </div>
     </div>
   );

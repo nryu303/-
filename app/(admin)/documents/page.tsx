@@ -33,6 +33,7 @@ import {
   inputClass,
   statusTone,
 } from "@/components/ui";
+import { useToast } from "@/components/toast";
 import {
   PDF_CATEGORIES,
   PDF_DOCUMENTS,
@@ -41,8 +42,25 @@ import {
 } from "@/lib/mock-data";
 
 export default function DocumentsPage() {
+  const { push } = useToast();
   const [selectedId, setSelectedId] = useState(PDF_DOCUMENTS[3].id); // 要修正の資料を初期選択
   const [filter, setFilter] = useState<string>("すべて");
+
+  const confirmDoc = () => {
+    push({
+      kind: "success",
+      title: "抽出結果を確定しました",
+      body: "修正内容は履歴として保存され、銘柄・決算日と紐付けられます。",
+    });
+  };
+
+  const notifyUpload = () => {
+    push({
+      kind: "info",
+      title: "デモではアップロードは行いません",
+      body: "本番では pdfplumber による文字抽出が自動実行され、下書きが登録されます。",
+    });
+  };
 
   const doc = PDF_DOCUMENTS.find((d) => d.id === selectedId)!;
   const list =
@@ -58,7 +76,7 @@ export default function DocumentsPage() {
         eyebrow="要件5 — 外部PDF資料の管理"
         title="PDF資料管理"
         description="決算資料やIR資料のPDFをアップロードすると、銘柄コード・会社名・公開日・本文を自動で抽出して下書き登録します。抽出結果はこの画面から修正でき、修正履歴も保存されます。"
-        action={<Button>PDFをアップロード</Button>}
+        action={<Button onClick={notifyUpload}>PDFをアップロード</Button>}
       />
 
       <DemoNote>
@@ -80,7 +98,11 @@ export default function DocumentsPage() {
           description="複数ファイルをまとめて登録できます。ファイル名からも銘柄コードを推定します。"
         />
         <CardBody>
-          <div className="rounded-xl border-2 border-dashed border-ink-200 bg-ink-50/50 px-6 py-10 text-center">
+          <button
+            type="button"
+            onClick={notifyUpload}
+            className="w-full rounded-xl border-2 border-dashed border-ink-200 bg-ink-50/50 px-6 py-10 text-center transition hover:border-accent hover:bg-accent/5"
+          >
             <p className="text-[28px] leading-none text-ink-300" aria-hidden>
               ▤
             </p>
@@ -88,13 +110,10 @@ export default function DocumentsPage() {
               ここにPDFをドラッグ＆ドロップ
             </p>
             <p className="mt-1 text-[12px] text-ink-400">
-              または
-              <button className="mx-1 font-medium text-accent hover:underline">
-                ファイルを選択
-              </button>
+              または<span className="mx-1 font-medium text-accent">ファイルを選択</span>
               （PDF / 最大50MB / 複数可）
             </p>
-          </div>
+          </button>
         </CardBody>
       </Card>
 
@@ -276,8 +295,12 @@ export default function DocumentsPage() {
             </Field>
 
             <div className="flex gap-2 pt-1">
-              <Button className="flex-1">確定して保存</Button>
-              <Button variant="secondary">PDFを表示</Button>
+              <Button className="flex-1" onClick={confirmDoc}>
+                確定して保存
+              </Button>
+              <Button variant="secondary" onClick={notifyUpload}>
+                PDFを表示
+              </Button>
             </div>
           </CardBody>
         </Card>

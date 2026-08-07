@@ -158,27 +158,60 @@ export function Stat({
   value,
   sub,
   tone,
+  icon,
+  trend,
+  onClick,
 }: {
   label: string;
   value: string;
   sub?: string;
   tone?: "gain" | "loss";
+  icon?: string;
+  /** 前期比などの増減表示 */
+  trend?: { value: string; up: boolean };
+  onClick?: () => void;
 }) {
+  const Wrapper = onClick ? "button" : "div";
   return (
-    <div className="rounded-xl border border-ink-200 bg-white px-4 py-3.5 shadow-sm">
-      <p className="text-[12px] font-medium text-ink-500">{label}</p>
-      <p
-        className={cx(
-          "tnum mt-1.5 text-xl font-bold tracking-tight sm:text-2xl",
-          tone === "gain" && "text-emerald-600",
-          tone === "loss" && "text-red-600",
-          !tone && "text-ink-900"
+    <Wrapper
+      {...(onClick ? { onClick, type: "button" as const } : {})}
+      className={cx(
+        "rounded-xl border border-ink-200 bg-white px-4 py-3.5 text-left shadow-sm transition",
+        onClick && "hover:border-ink-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent/30"
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[12px] font-medium text-ink-500">{label}</p>
+        {icon && (
+          <span aria-hidden className="text-[13px] leading-none text-ink-300">
+            {icon}
+          </span>
         )}
-      >
-        {value}
-      </p>
+      </div>
+      <div className="mt-1.5 flex items-baseline gap-2">
+        <p
+          className={cx(
+            "tnum text-xl font-bold tracking-tight sm:text-2xl",
+            tone === "gain" && "text-emerald-600",
+            tone === "loss" && "text-red-600",
+            !tone && "text-ink-900"
+          )}
+        >
+          {value}
+        </p>
+        {trend && (
+          <span
+            className={cx(
+              "tnum shrink-0 text-[11.5px] font-semibold",
+              trend.up ? "text-emerald-600" : "text-red-600"
+            )}
+          >
+            {trend.up ? "▲" : "▼"} {trend.value}
+          </span>
+        )}
+      </div>
       {sub && <p className="mt-1 text-[11.5px] text-ink-400">{sub}</p>}
-    </div>
+    </Wrapper>
   );
 }
 
@@ -334,6 +367,132 @@ export function DemoNote({ children }: { children: ReactNode }) {
         ⓘ
       </span>
       <p>{children}</p>
+    </div>
+  );
+}
+
+/* ---------------- Sortable header ---------------- */
+
+export type SortDir = "asc" | "desc";
+
+/** クリックで並び替えできる見出しセル */
+export function SortTh<K extends string>({
+  children,
+  field,
+  sort,
+  onSort,
+  align = "left",
+}: {
+  children: ReactNode;
+  field: K;
+  sort: { key: K; dir: SortDir };
+  onSort: (key: K) => void;
+  align?: "left" | "right" | "center";
+}) {
+  const active = sort.key === field;
+  return (
+    <th
+      className={cx(
+        "whitespace-nowrap border-b border-ink-200 bg-ink-50/70 px-3 py-2.5 text-[11.5px] font-semibold text-ink-500",
+        align === "right" && "text-right",
+        align === "center" && "text-center"
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className={cx(
+          "inline-flex items-center gap-1 rounded transition hover:text-ink-900",
+          active && "text-accent",
+          align === "right" && "flex-row-reverse"
+        )}
+      >
+        {children}
+        <span aria-hidden className="text-[9px] leading-none opacity-70">
+          {active ? (sort.dir === "asc" ? "▲" : "▼") : "⇅"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+/** 並び替え state をまとめて扱うヘルパー */
+export function nextSort<K extends string>(
+  current: { key: K; dir: SortDir },
+  key: K
+): { key: K; dir: SortDir } {
+  if (current.key === key) {
+    return { key, dir: current.dir === "asc" ? "desc" : "asc" };
+  }
+  return { key, dir: "desc" };
+}
+
+/* ---------------- Empty state ---------------- */
+
+export function EmptyState({
+  icon = "◌",
+  title,
+  body,
+  action,
+}: {
+  icon?: string;
+  title: string;
+  body?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="px-6 py-12 text-center">
+      <p className="text-[26px] leading-none text-ink-200" aria-hidden>
+        {icon}
+      </p>
+      <p className="mt-3 text-[13.5px] font-semibold text-ink-700">{title}</p>
+      {body && (
+        <p className="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-ink-400">
+          {body}
+        </p>
+      )}
+      {action && <div className="mt-4">{action}</div>}
+    </div>
+  );
+}
+
+/* ---------------- Skeleton ---------------- */
+
+export function SkeletonRows({ rows = 5, cols = 6 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="space-y-2 px-5 py-4">
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} className="flex gap-3">
+          {Array.from({ length: cols }).map((_, c) => (
+            <div
+              key={c}
+              className="h-4 flex-1 animate-pulse rounded bg-ink-100"
+              style={{ animationDelay: `${(r * cols + c) * 40}ms` }}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- Section label ---------------- */
+
+/** 画面内のグループ見出し */
+export function SectionTitle({
+  children,
+  hint,
+}: {
+  children: ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div className="mb-3 mt-1 flex items-baseline gap-2.5">
+      <h2 className="text-[13px] font-bold tracking-tight text-ink-800">
+        {children}
+      </h2>
+      {hint && <span className="text-[11.5px] text-ink-400">{hint}</span>}
+      <span className="h-px flex-1 bg-ink-200" />
     </div>
   );
 }

@@ -29,6 +29,7 @@ import {
   cx,
   statusTone,
 } from "@/components/ui";
+import { useToast } from "@/components/toast";
 import {
   ERROR_LOGS,
   TODAY,
@@ -70,41 +71,70 @@ const DATA_QUALITY = [
 ];
 
 export default function DataUpdatePage() {
+  const { push } = useToast();
   const [jobs, setJobs] = useState(UPDATE_JOBS);
   const [running, setRunning] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
-  /** 再取得ボタン: 状態遷移のみを再現(実APIは呼びません) */
-  const rerun = (id: string) => {
-    setRunning(id);
-    setJobs((prev) =>
-      prev.map((j) =>
-        j.id === id
-          ? { ...j, status: "実行中" as JobStatus, message: "再取得しています…" }
-          : j
-      )
-    );
-
-    window.setTimeout(() => {
+  /** 再取得: 進捗バーを進めながら「実行中 → 成功」を再現(実APIは呼びません) */
+  const rerun = (id: string) =>
+    new Promise<void>((resolve) => {
+      const job = jobs.find((j) => j.id === id);
+      setRunning(id);
+      setProgress(0);
       setJobs((prev) =>
         prev.map((j) =>
           j.id === id
-            ? {
-                ...j,
-                status: "成功" as JobStatus,
-                records: 3874,
-                durationSec: 41,
-                message: "中断地点から再開し、取得を完了しました",
-              }
+            ? { ...j, status: "実行中" as JobStatus, message: "再取得しています…" }
             : j
         )
       );
-      setRunning(null);
-    }, 1800);
-  };
 
-  const runAll = () => {
-    const target = jobs.find((j) => j.status === "エラー" || j.status === "待機中");
-    if (target) rerun(target.id);
+      let p = 0;
+      const timer = window.setInterval(() => {
+        p += 6 + Math.random() * 12;
+        if (p >= 100) {
+          window.clearInterval(timer);
+          setProgress(100);
+          setJobs((prev) =>
+            prev.map((j) =>
+              j.id === id
+                ? {
+                    ...j,
+                    status: "成功" as JobStatus,
+                    records: 3874,
+                    durationSec: 41,
+                    message: "中断地点から再開し、取得を完了しました",
+                  }
+                : j
+            )
+          );
+          setRunning(null);
+          push({
+            kind: "success",
+            title: `${job?.dataset ?? "ジョブ"}の再取得が完了しました`,
+            body: "中断地点(チェックポイント)から再開し、3,874件を取得しました。",
+          });
+          resolve();
+        } else {
+          setProgress(p);
+        }
+      }, 110);
+    });
+
+  /** 未完了のジョブを順番に実行 */
+  const runAll = async () => {
+    const targets = jobs.filter(
+      (j) => j.status === "エラー" || j.status === "待機中"
+    );
+    if (targets.length === 0) {
+      push({ kind: "info", title: "未完了のジョブはありません" });
+      return;
+    }
+    for (const t of targets) {
+      // eslint-disable-next-line no-await-in-loop
+      await rerun(t.id);
+    }
   };
 
   return (
@@ -172,7 +202,19 @@ export default function DataUpdatePage() {
                     {j.startedAt}
                   </Td>
                   <Td className="max-w-[260px] text-[12px] text-ink-500">
-                    {j.message}
+                    {running === j.id ? (
+                      <div className="w-[200px]">
+                        <div className="mb-1 flex justify-between text-[11px]">
+                          <span className="text-accent">取得しています…</span>
+                          <span className="tnum font-semibold text-accent">
+                            {Math.round(progress)}%
+                          </span>
+                        </div>
+                        <MiniBar ratio={progress / 100} />
+                      </div>
+                    ) : (
+                      j.message
+                    )}
                   </Td>
                   <Td align="center">
                     {j.status === "エラー" || j.status === "待機中" ? (

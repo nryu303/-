@@ -26,6 +26,7 @@ import {
   cx,
   inputClass,
 } from "@/components/ui";
+import { useToast } from "@/components/toast";
 import { API_ACCESS_LOGS, API_ENDPOINTS, API_KEYS, num } from "@/lib/mock-data";
 
 /** エンドポイントごとのサンプルレスポンス */
@@ -92,8 +93,17 @@ const SAMPLE_RESPONSES: Record<string, string> = {
 };
 
 export default function ApiAccessPage() {
+  const { push } = useToast();
   const [endpoint, setEndpoint] = useState("/api/v1/prices");
   const [copied, setCopied] = useState(false);
+
+  const issueKey = () => {
+    push({
+      kind: "info",
+      title: "デモではキーは発行されません",
+      body: "本番では発行時に一度だけ平文が表示され、DBにはハッシュのみ保存されます。",
+    });
+  };
 
   const sample = SAMPLE_RESPONSES[endpoint] ?? SAMPLE_RESPONSES["/api/v1/prices"];
   const active = API_KEYS.filter((k) => k.active);
@@ -105,6 +115,7 @@ export default function ApiAccessPage() {
   const copy = () => {
     navigator.clipboard?.writeText(curl);
     setCopied(true);
+    push({ kind: "success", title: "リクエスト例をコピーしました" });
     window.setTimeout(() => setCopied(false), 1500);
   };
 
@@ -114,7 +125,7 @@ export default function ApiAccessPage() {
         eyebrow="要件8 — 外部連携API"
         title="外部連携API"
         description="分析用AIから蓄積データを取得するための読み取り専用REST APIです。APIキーごとに参照できるデータ範囲を制限でき、アクセス状況はすべて記録されます。"
-        action={<Button>＋ 新しいAPIキーを発行</Button>}
+        action={<Button onClick={issueKey}>＋ 新しいAPIキーを発行</Button>}
       />
 
       <DemoNote>
@@ -307,7 +318,9 @@ export default function ApiAccessPage() {
               発行されたキーは<strong>この画面に一度だけ表示されます</strong>。
               閉じると再表示できないため、必ず安全な場所に保管してください。
             </div>
-            <Button className="w-full">キーを発行する</Button>
+            <Button className="w-full" onClick={issueKey}>
+              キーを発行する
+            </Button>
           </CardBody>
         </Card>
 

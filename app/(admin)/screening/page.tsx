@@ -20,15 +20,22 @@ import {
   CardBody,
   CardHeader,
   DemoNote,
+  EmptyState,
   Field,
   PageHeader,
   PnlText,
+  SectionTitle,
+  SortTh,
   Table,
   Td,
   Th,
   cx,
   inputClass,
+  nextSort,
+  type SortDir,
 } from "@/components/ui";
+import { useToast } from "@/components/toast";
+import { downloadCsv } from "@/lib/csv";
 import {
   CONDITION_FIELDS,
   CONDITION_OPERATORS,
@@ -41,7 +48,21 @@ import {
 
 const MARKETS = ["すべて", "プライム", "スタンダード", "グロース"] as const;
 
+/** 並び替え可能な列 */
+type SortKey =
+  | "code"
+  | "marketCap"
+  | "per"
+  | "pbr"
+  | "dividendYield"
+  | "close"
+  | "changePct"
+  | "volume"
+  | "nextEarningsDate";
+
 export default function ScreeningPage() {
+  const { push } = useToast();
+
   // ---- 絞り込み条件(実際に効きます) ----
   const [market, setMarket] = useState<string>("すべて");
   const [sector, setSector] = useState<string>("すべて");
@@ -50,6 +71,10 @@ export default function ScreeningPage() {
   const [daysBefore, setDaysBefore] = useState(0); // 0 = 指定なし
   const [keyword, setKeyword] = useState("");
   const [activeTemplate, setActiveTemplate] = useState(CONDITION_TEMPLATES[0].id);
+  const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
+    key: "marketCap",
+    dir: "desc",
+  });
 
   const sectors = useMemo(
     () => ["すべて", ...Array.from(new Set(STOCKS.map((s) => s.sector))).sort()],
@@ -57,24 +82,31 @@ export default function ScreeningPage() {
   );
 
   const results = useMemo(() => {
-    return STOCKS.filter((s) => {
+    const filtered = STOCKS.filter((s) => {
       if (market !== "すべて" && s.market !== market) return false;
       if (sector !== "すべて" && s.sector !== sector) return false;
       if (s.marketCap < minCap) return false;
       if (s.pbr > maxPbr) return false;
       if (daysBefore !== 0 && Math.abs(s.businessDaysToEarnings) !== daysBefore)
         return false;
-      if (
-        keyword &&
-        !s.name.includes(keyword) &&
-        !s.code.includes(keyword)
-      )
+      if (keyword && !s.name.includes(keyword) && !s.code.includes(keyword))
         return false;
       return true;
     });
-  }, [market, sector, minCap, maxPbr, daysBefore, keyword]);
+
+    return filtered.sort((a, b) => {
+      const av = a[sort.key];
+      const bv = b[sort.key];
+      const cmp =
+        typeof av === "number" && typeof bv === "number"
+          ? av - bv
+          : String(av).localeCompare(String(bv), "ja");
+      return sort.dir === "asc" ? cmp : -cmp;
+    });
+  }, [market, sector, minCap, maxPbr, daysBefore, keyword, sort]);
 
   const template = CONDITION_TEMPLATES.find((t) => t.id === activeTemplate)!;
+  const onSort = (key: SortKey) => setSort((c) => nextSort(c, key));
 
   const resetAll = () => {
     setMarket("すべて");
@@ -83,6 +115,37 @@ export default function ScreeningPage() {
     setMaxPbr(10);
     setDaysBefore(0);
     setKeyword("");
+    push({ kind: "info", title: "条件をリセットしました" });
+  };
+
+  const saveTemplate = () => {
+    push({
+      kind: "success",
+      title: "抽出条件を保存しました",
+      body: "本番環境では analysis_conditions テーブルに保存され、いつでも呼び出せます。",
+    });
+  };
+
+  /** 実際にCSVファイルをダウンロードします */
+  const exportCsv = () => {
+    downloadCsv(
+      `銘柄抽出_${TODAY}.csv`,
+      [
+        "コード", "銘柄名", "市場", "業種", "時価総額(億円)",
+        "PER", "PBR", "配当利回り(%)", "終値", "前日比(%)",
+        "出来高", "決算予定日", "決算までの営業日",
+      ],
+      results.map((s) => [
+        s.code, s.name, s.market, s.sector, s.marketCap,
+        s.per, s.pbr, s.dividendYield, s.close, s.changePct,
+        s.volume, s.nextEarningsDate, Math.abs(s.businessDaysToEarnings),
+      ])
+    );
+    push({
+      kind: "success",
+      title: "CSVを出力しました",
+      body: `${results.length}件をダウンロードしました。Excelで開けます。`,
+    });
   };
 
   return (
@@ -96,7 +159,7 @@ export default function ScreeningPage() {
             <Button variant="secondary" onClick={resetAll}>
               条件をリセット
             </Button>
-            <Button>この条件を保存</Button>
+            <Button onClick={saveTemplate}>この条件を保存</Button>
           </div>
         }
       />
@@ -303,7 +366,12 @@ export default function ScreeningPage() {
           description={`基準日 ${TODAY} 時点。この一覧はそのままバックテストの対象銘柄群として渡せます。`}
           action={
             <div className="flex gap-2">
-              <Button variant="secondary" className="px-2.5 py-1.5 text-[12px]">
+              <Button
+                variant="secondary"
+                onClick={exportCsv}
+                disabled={results.length === 0}
+                className="px-2.5 py-1.5 text-[12px]"
+              >
                 CSV出力
               </Button>
               <Link
@@ -316,27 +384,50 @@ export default function ScreeningPage() {
           }
         />
         {results.length === 0 ? (
-          <CardBody>
-            <p className="py-8 text-center text-[13px] text-ink-400">
-              条件に合致する銘柄がありません。時価総額やPBRの条件を緩めてください。
-            </p>
-          </CardBody>
+          <EmptyState
+            icon="⌕"
+            title="条件に合致する銘柄がありません"
+            body="時価総額やPBRの条件を緩めるか、市場区分・業種の絞り込みを解除してください。"
+            action={
+              <Button variant="secondary" onClick={resetAll}>
+                条件をリセット
+              </Button>
+            }
+          />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>コード</Th>
+                <SortTh field="code" sort={sort} onSort={onSort}>
+                  コード
+                </SortTh>
                 <Th>銘柄名</Th>
                 <Th>市場</Th>
                 <Th>業種</Th>
-                <Th align="right">時価総額</Th>
-                <Th align="right">PER</Th>
-                <Th align="right">PBR</Th>
-                <Th align="right">配当</Th>
-                <Th align="right">終値</Th>
-                <Th align="right">前日比</Th>
-                <Th align="right">出来高</Th>
-                <Th>決算予定日</Th>
+                <SortTh field="marketCap" sort={sort} onSort={onSort} align="right">
+                  時価総額
+                </SortTh>
+                <SortTh field="per" sort={sort} onSort={onSort} align="right">
+                  PER
+                </SortTh>
+                <SortTh field="pbr" sort={sort} onSort={onSort} align="right">
+                  PBR
+                </SortTh>
+                <SortTh field="dividendYield" sort={sort} onSort={onSort} align="right">
+                  配当
+                </SortTh>
+                <SortTh field="close" sort={sort} onSort={onSort} align="right">
+                  終値
+                </SortTh>
+                <SortTh field="changePct" sort={sort} onSort={onSort} align="right">
+                  前日比
+                </SortTh>
+                <SortTh field="volume" sort={sort} onSort={onSort} align="right">
+                  出来高
+                </SortTh>
+                <SortTh field="nextEarningsDate" sort={sort} onSort={onSort}>
+                  決算予定日
+                </SortTh>
                 <Th align="center">営業日</Th>
               </tr>
             </thead>

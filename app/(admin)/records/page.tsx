@@ -29,10 +29,13 @@ import {
   inputClass,
   statusTone,
 } from "@/components/ui";
+import { useToast } from "@/components/toast";
+import { downloadCsv } from "@/lib/csv";
 import {
   CONDITION_TEMPLATES,
   MONTHLY_SUMMARY,
   STOCKS,
+  TODAY,
   TRADE_RECORDS,
   num,
   pct,
@@ -65,7 +68,32 @@ const BY_CONDITION = [
 ];
 
 export default function RecordsPage() {
+  const { push } = useToast();
   const [showForm, setShowForm] = useState(false);
+
+  const save = () => {
+    setShowForm(false);
+    push({
+      kind: "success",
+      title: "実績を登録しました",
+      body: "本番環境では trade_records テーブルに保存され、集計に即時反映されます。",
+    });
+  };
+
+  const exportCsv = () => {
+    downloadCsv(
+      `実績記録_${TODAY}.csv`,
+      [
+        "コード", "銘柄名", "判定理由", "購入日", "購入価格", "株数",
+        "売却日", "売却価格", "予測損益率(%)", "実績損益率(%)", "損益(円)", "状態",
+      ],
+      TRADE_RECORDS.map((r) => [
+        r.code, r.name, r.reason, r.buyDate, r.buyPrice, r.shares,
+        r.sellDate, r.sellPrice, r.predictedReturnPct, r.actualReturnPct, r.pnl, r.status,
+      ])
+    );
+    push({ kind: "success", title: "CSVを出力しました", body: `${TRADE_RECORDS.length}件の実績をダウンロードしました。` });
+  };
 
   const closed = TRADE_RECORDS.filter((r) => r.status === "決済済");
   const holding = TRADE_RECORDS.filter((r) => r.status === "保有中");
@@ -170,7 +198,7 @@ export default function RecordsPage() {
               </div>
             </div>
             <div className="mt-4 flex gap-2">
-              <Button>保存</Button>
+              <Button onClick={save}>保存</Button>
               <Button variant="secondary" onClick={() => setShowForm(false)}>
                 キャンセル
               </Button>
@@ -185,7 +213,11 @@ export default function RecordsPage() {
           title="売買実績の一覧"
           description="判定理由もあわせて保存されるため、後から「なぜこの銘柄を選んだか」を振り返れます。"
           action={
-            <Button variant="secondary" className="px-2.5 py-1.5 text-[12px]">
+            <Button
+              variant="secondary"
+              onClick={exportCsv}
+              className="px-2.5 py-1.5 text-[12px]"
+            >
               CSV出力
             </Button>
           }

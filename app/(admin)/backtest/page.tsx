@@ -34,6 +34,8 @@ import {
   cx,
   inputClass,
 } from "@/components/ui";
+import { useToast } from "@/components/toast";
+import { downloadCsv } from "@/lib/csv";
 import {
   BACKTEST_BY_MARKET,
   BACKTEST_BY_PERIOD,
@@ -42,6 +44,7 @@ import {
   BACKTEST_TRADES,
   CONDITION_TEMPLATES,
   EQUITY_CURVE,
+  TODAY,
   num,
   pct,
   yen,
@@ -51,6 +54,7 @@ import type { BreakdownRow } from "@/lib/types";
 type Phase = "idle" | "running" | "done";
 
 export default function BacktestPage() {
+  const { push } = useToast();
   const [phase, setPhase] = useState<Phase>("done");
   const [progress, setProgress] = useState(100);
   const [selectedDays, setSelectedDays] = useState(5);
@@ -65,10 +69,50 @@ export default function BacktestPage() {
         window.clearInterval(timer);
         setProgress(100);
         setPhase("done");
+        push({
+          kind: "success",
+          title: "バックテストが完了しました",
+          body: "412件の取引を5パターンの保有期間で検証しました。",
+        });
       } else {
         setProgress(p);
       }
     }, 90);
+  };
+
+  /** 保有期間別の比較結果をCSV出力 */
+  const exportSummary = () => {
+    downloadCsv(
+      `バックテスト結果_${TODAY}.csv`,
+      [
+        "保有期間(営業日)", "取引数", "総損益(円)", "平均損益率(%)", "勝率(%)",
+        "中央値(%)", "最大損失(円)", "最大ドローダウン(%)", "最大連敗",
+        "必要資金(円)", "シャープレシオ",
+      ],
+      BACKTEST_RESULTS.map((r) => [
+        r.holdingDays, r.trades, r.totalPnl, r.avgReturnPct, r.winRatePct,
+        r.medianReturnPct, r.maxLoss, r.maxDrawdownPct, r.maxConsecutiveLosses,
+        r.requiredCapital, r.sharpe,
+      ])
+    );
+    push({ kind: "success", title: "CSVを出力しました", body: "保有期間別の比較結果をダウンロードしました。" });
+  };
+
+  /** 取引明細をCSV出力 */
+  const exportTrades = () => {
+    downloadCsv(
+      `取引明細_${TODAY}.csv`,
+      ["コード", "銘柄名", "業種", "購入日", "購入価格", "売却日", "売却価格", "株数", "損益(円)", "損益率(%)"],
+      BACKTEST_TRADES.map((t) => [
+        t.code, t.name, t.sector, t.buyDate, t.buyPrice,
+        t.sellDate, t.sellPrice, t.shares, t.pnl, t.returnPct,
+      ])
+    );
+    push({
+      kind: "success",
+      title: "取引明細をCSV出力しました",
+      body: "本番では全412件が出力されます(デモは18件)。",
+    });
   };
 
   const best = BACKTEST_RESULTS.reduce((a, b) => (b.sharpe > a.sharpe ? b : a));
@@ -206,7 +250,11 @@ export default function BacktestPage() {
               title="保有期間別の一括比較"
               description="同じ銘柄群・同じ売買条件で、保有期間だけを変えた結果を横並びで比較します。行をクリックすると上部のサマリーが切り替わります。"
               action={
-                <Button variant="secondary" className="px-2.5 py-1.5 text-[12px]">
+                <Button
+                  variant="secondary"
+                  onClick={exportSummary}
+                  className="px-2.5 py-1.5 text-[12px]"
+                >
                   CSV出力
                 </Button>
               }
@@ -345,7 +393,11 @@ export default function BacktestPage() {
               title="取引明細"
               description="1取引ごとの購入日・購入価格・売却日・売却価格・損益です。CSVで全件ダウンロードできます。"
               action={
-                <Button variant="secondary" className="px-2.5 py-1.5 text-[12px]">
+                <Button
+                  variant="secondary"
+                  onClick={exportTrades}
+                  className="px-2.5 py-1.5 text-[12px]"
+                >
                   CSV出力(全412件)
                 </Button>
               }

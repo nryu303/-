@@ -28,5 +28,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# イントロ動画をリポジトリに含めない場合はコメントを外してください
+# (Vercel には別途アップロードが必要になります)
+# /public/intro.mp4
+
 # typescript
 *.tsbuildinfo
