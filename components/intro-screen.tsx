@@ -3,21 +3,54 @@
 // ============================================================
 // フルスクリーン イントロ画面
 //
-// public/intro.mp4 が存在すればその動画を全画面で再生し、
-// 無い場合はコードで描画した背景(IntroScene)を表示します。
-// どちらの場合も操作方法は同じです。
+// 表示の流れ:
+//   1. 最初の3秒は背景アニメーション(IntroScene)を表示
+//   2. 3秒後、public/intro.mp4 へゆっくり切り替え(クロスフェード)
+//   3. 動画が無い / 読み込めない場合は、背景アニメーションのまま
 //
+// どの場合も操作方法は同じです。
+// 待ち時間は VIDEO_DELAY_MS で変更できます。
 // 動画の差し替え方法は README をご覧ください。
 // ============================================================
 
 import { useEffect, useRef, useState } from "react";
 import IntroScene from "./intro-scene";
 
+/** 動画を表示し始めるまでの待ち時間(ミリ秒) */
+const VIDEO_DELAY_MS = 3000;
+
 export default function IntroScreen({ onEnter }: { onEnter: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasVideo, setHasVideo] = useState(false);
+
+  /** 動画が再生可能な状態か */
+  const [videoReady, setVideoReady] = useState(false);
+  /** 待ち時間が経過したか */
+  const [delayPassed, setDelayPassed] = useState(false);
+
   const [leaving, setLeaving] = useState(false);
   const [muted, setMuted] = useState(true);
+
+  // 動画を実際に表示するかどうか
+  // (読み込み完了 かつ 3秒経過 の両方を満たしたとき)
+  const showVideo = videoReady && delayPassed;
+
+  // 開始から3秒後に動画へ切り替える
+  useEffect(() => {
+    const t = window.setTimeout(() => setDelayPassed(true), VIDEO_DELAY_MS);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  // 切り替えの瞬間に動画を先頭から再生する
+  // (待機中も再生は進んでいるため、途中から始まって見えるのを防ぎます)
+  useEffect(() => {
+    if (!showVideo) return;
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = 0;
+    void v.play().catch(() => {
+      /* 自動再生が拒否された場合は背景アニメーションのまま表示します */
+    });
+  }, [showVideo]);
 
   // 画面遷移(フェードアウトしてから次へ)
   const enter = () => {
@@ -46,6 +79,21 @@ export default function IntroScreen({ onEnter }: { onEnter: () => void }) {
       }`}
     >
       {/* ---------- 背景 ---------- */}
+      {/*
+        最初の3秒は背景アニメーション(IntroScene)を表示し、
+        そのあと動画へゆっくり切り替えます。
+        動画が無い / 読み込めない場合は、そのまま背景アニメーションが残ります。
+      */}
+
+      {/* 下に敷く背景アニメーション。動画表示後もフェード完了まで残します */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-[1200ms] ${
+          showVideo ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <IntroScene />
+      </div>
+
       <video
         ref={videoRef}
         autoPlay
@@ -53,17 +101,14 @@ export default function IntroScreen({ onEnter }: { onEnter: () => void }) {
         muted={muted}
         playsInline
         preload="auto"
-        onCanPlay={() => setHasVideo(true)}
-        onError={() => setHasVideo(false)}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-          hasVideo ? "opacity-100" : "opacity-0"
+        onCanPlay={() => setVideoReady(true)}
+        onError={() => setVideoReady(false)}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ${
+          showVideo ? "opacity-100" : "opacity-0"
         }`}
       >
         <source src="/intro.mp4" type="video/mp4" />
       </video>
-
-      {/* 動画が無い / 読み込めない場合の背景 */}
-      {!hasVideo && <IntroScene />}
 
       {/* 可読性のための暗幕 */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/80" />
@@ -108,7 +153,7 @@ export default function IntroScreen({ onEnter }: { onEnter: () => void }) {
 
       {/* ---------- 右下の操作 ---------- */}
       <div className="absolute bottom-5 right-5 flex items-center gap-2">
-        {hasVideo && (
+        {showVideo && (
           <button
             type="button"
             onClick={() => {
@@ -131,8 +176,11 @@ export default function IntroScreen({ onEnter }: { onEnter: () => void }) {
         </button>
       </div>
 
-      {/* 動画未設置のときだけ出る開発者向けメモ */}
-      {!hasVideo && (
+      {/*
+        動画未設置のときだけ出る開発者向けメモ。
+        待機中の3秒間には出さず、読み込みに失敗した場合のみ表示します。
+      */}
+      {delayPassed && !videoReady && (
         <p className="absolute bottom-5 left-5 max-w-[280px] text-left text-[10.5px] leading-relaxed text-white/35">
           public/intro.mp4 を配置すると、この背景が動画に切り替わります(README参照)
         </p>
