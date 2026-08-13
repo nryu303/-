@@ -139,7 +139,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
-            src="/logo.jpg"
+            src="/分析ロゴ.png"
             alt="日本株分析システム"
             width={28}
             height={28}
@@ -189,7 +189,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             )}
           >
             <Image
-              src="/logo.jpg"
+              src="/分析ロゴ.png"
               alt="日本株分析システム"
               width={36}
               height={36}

@@ -82,7 +82,7 @@ export default function EntryPage() {
         <div className="relative mx-auto w-full max-w-lg">
           <div className="mb-8 flex items-center gap-3">
             <Image
-              src="/logo.jpg"
+              src="/分析ロゴ.png"
               alt="日本株分析システム"
               width={44}
               height={44}
