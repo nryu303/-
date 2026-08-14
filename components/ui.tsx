@@ -21,7 +21,7 @@ export function Card({
   return (
     <section
       className={cx(
-        "rounded-xl border border-ink-200 bg-white shadow-sm",
+        "overflow-hidden rounded-xl border border-ink-200/70 bg-white/90 shadow-sm ring-1 ring-black/[0.02] backdrop-blur-sm transition hover:shadow-md",
         className
       )}
     >
@@ -40,11 +40,11 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-start justify-between gap-3 border-b border-ink-200 px-5 py-4">
+    <header className="flex flex-wrap items-start justify-between gap-3 border-b border-ink-200/60 bg-ink-50/40 px-5 py-4">
       <div className="min-w-0">
         <h2 className="text-[15px] font-semibold text-ink-900">{title}</h2>
         {description && (
-          <p className="mt-1 text-[13px] leading-relaxed text-ink-500">
+          <p className="mt-1 text-[12.5px] leading-relaxed text-ink-500">
             {description}
           </p>
         )}
@@ -61,7 +61,7 @@ export function CardBody({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cx("px-5 py-4", className)}>{children}</div>;
+  return <div className={cx("px-5 py-5", className)}>{children}</div>;
 }
 
 /* ---------------- Page header ---------------- */
@@ -78,10 +78,10 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow && (
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
             {eyebrow}
           </p>
         )}
@@ -176,8 +176,9 @@ export function Stat({
     <Wrapper
       {...(onClick ? { onClick, type: "button" as const } : {})}
       className={cx(
-        "rounded-xl border border-ink-200 bg-white px-4 py-3.5 text-left shadow-sm transition",
-        onClick && "hover:border-ink-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent/30"
+        "rounded-xl border border-ink-200/70 bg-white/90 px-4 py-4 text-left shadow-sm ring-1 ring-black/[0.02] backdrop-blur-sm transition",
+        onClick &&
+          "hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent/30"
       )}
     >
       <div className="flex items-start justify-between gap-2">

@@ -321,7 +321,7 @@ export default function ArchitecturePage() {
       />
 
       {/* ============ 1. 全体構成 ============ */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="1. 全体構成"
           description="上から下へデータが流れます。外部から取得したデータをSupabaseに蓄積し、FastAPIで加工して管理画面・外部AIへ提供します。"
@@ -367,7 +367,7 @@ export default function ArchitecturePage() {
       </Card>
 
       {/* ============ 2. 日次更新フロー ============ */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="2. 日次データ更新の流れ(フローチャート)"
           description="毎営業日の深夜に自動実行される処理です。エラーが起きても自動で再試行し、中断しても翌回に続きから再開します。"
@@ -441,7 +441,7 @@ export default function ArchitecturePage() {
       </Card>
 
       {/* ============ 3. 業務フロー ============ */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="3. 分析から記録までの業務フロー"
           description="実際にこのシステムをどう使うかの流れです。各ステップから対応する画面へ移動できます。"
@@ -498,7 +498,7 @@ export default function ArchitecturePage() {
       </Card>
 
       {/* ============ 4. ER図 ============ */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="4. データベース構成(主要テーブル)"
           description="銘柄マスタ(stocks)を中心に、各テーブルが銘柄コードで関連します。行数の多い日次株価は日付でパーティション分割し、検索速度を確保します。"

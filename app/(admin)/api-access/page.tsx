@@ -132,7 +132,7 @@ export default function ApiAccessPage() {
         このデモではAPIは実際には稼働していません。エンドポイントを選択すると、本番で返却されるJSONの形式をサンプル表示します。
       </DemoNote>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="有効なAPIキー" value={`${active.length} 件`} sub={`全 ${API_KEYS.length} 件中`} />
         <Stat label="直近30日のリクエスト" value={num(totalReq)} sub="全キー合計" />
         <Stat label="平均応答時間" value="94 ms" sub="直近24時間" />
@@ -140,7 +140,7 @@ export default function ApiAccessPage() {
       </div>
 
       {/* ---------- APIキー ---------- */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="APIキーの管理"
           description="キーは発行時に一度だけ表示され、データベースにはハッシュ化して保存します。平文では保持しません。"
@@ -195,7 +195,7 @@ export default function ApiAccessPage() {
         </Table>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* ---------- エンドポイント一覧 ---------- */}
         <Card>
           <CardHeader

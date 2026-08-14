@@ -135,7 +135,7 @@ export default function DashboardPage() {
 
       {/* ---------- KPI ---------- */}
       <SectionTitle hint="クリックで詳細画面へ">主要指標</SectionTitle>
-      <div className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat
           label="登録銘柄数"
           value={num(S.totalStocks)}
@@ -170,7 +170,7 @@ export default function DashboardPage() {
       </div>
 
       <SectionTitle hint="毎営業日 02:00 に自動実行">本日の処理状況</SectionTitle>
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* ---------- 本日のジョブ ---------- */}
         <Card className="lg:col-span-2">
           <CardHeader

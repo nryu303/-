@@ -155,14 +155,14 @@ export default function DataUpdatePage() {
         成功」の画面遷移のみを再現します。本番では中断地点(チェックポイント)から自動で再開します。
       </DemoNote>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="次回自動実行" value="02:00" sub="毎営業日 / GitHub Actions" />
         <Stat label="本日の取得件数" value={num(4563)} sub={`${TODAY} 02:00 実行分`} />
         <Stat label="API呼び出し回数" value={num(1284)} sub="本日 / 上限の 43%" />
         <Stat label="平均処理時間" value="4分12秒" sub="直近30営業日の平均" />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* ---------- 本日のジョブ ---------- */}
         <Card className="lg:col-span-3">
           <CardHeader

@@ -1,14 +1,16 @@
 "use client";
 
 // ============================================================
-// フルスクリーン イントロ画面
+// ファーストビュー(全画面)
+//
+// システム名・概要・主な機能を、全画面の映像の上に表示します。
+// 「システムに入る」でログイン画面(/login)へ進みます。
 //
 // 表示の流れ:
 //   1. 最初の3秒は背景アニメーション(IntroScene)を表示
 //   2. 3秒後、public/intro.mp4 へゆっくり切り替え(クロスフェード)
 //   3. 動画が無い / 読み込めない場合は、背景アニメーションのまま
 //
-// どの場合も操作方法は同じです。
 // 待ち時間は VIDEO_DELAY_MS で変更できます。
 // 動画の差し替え方法は README をご覧ください。
 // ============================================================
@@ -18,6 +20,16 @@ import IntroScene from "./intro-scene";
 
 /** 動画を表示し始めるまでの待ち時間(ミリ秒) */
 const VIDEO_DELAY_MS = 3000;
+
+/** ファーストビューに表示する主な機能 */
+const FEATURES = [
+  "データ自動蓄積",
+  "銘柄抽出",
+  "バックテスト",
+  "PDF資料管理",
+  "実績記録",
+  "外部連携API",
+];
 
 export default function IntroScreen({ onEnter }: { onEnter: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -128,11 +140,23 @@ export default function IntroScreen({ onEnter }: { onEnter: () => void }) {
             日本株分析システム
           </h1>
 
-          <p className="mx-auto mt-5 max-w-xl text-[14px] leading-relaxed text-white/75 sm:text-[15.5px]">
+          <p className="mx-auto mt-5 max-w-2xl text-[14px] leading-relaxed text-white/80 sm:text-[15.5px]">
             東証全上場銘柄の時系列データを毎営業日自動で蓄積し、
             <br className="hidden sm:block" />
-            条件抽出・バックテスト・資料管理・実績記録までを一貫して行います。
+            条件抽出・バックテスト・資料管理・実績記録までを一貫して行うシステムです。
           </p>
+
+          {/* 主な機能 */}
+          <ul className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-x-2.5 gap-y-2">
+            {FEATURES.map((f) => (
+              <li
+                key={f}
+                className="rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-[11.5px] text-white/80 backdrop-blur-sm"
+              >
+                {f}
+              </li>
+            ))}
+          </ul>
 
           <button
             type="button"

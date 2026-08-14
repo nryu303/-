@@ -13,7 +13,15 @@ body {
 }
 
 body {
-  @apply bg-ink-50 text-ink-900 antialiased;
+  @apply bg-ink-100 text-ink-900 antialiased;
+  /* 管理画面の背景。単色より奥行きが出るよう、ごく淡いグラデーションにしています */
+  background-image: radial-gradient(
+      1200px 600px at 15% -10%,
+      rgba(37, 99, 235, 0.05),
+      transparent 60%
+    ),
+    radial-gradient(900px 500px at 100% 0%, rgba(100, 116, 139, 0.06), transparent 55%);
+  background-attachment: fixed;
 }
 
 /* 表・横スクロール領域のスクロールバーを控えめに */

@@ -84,7 +84,7 @@ export default function DocumentsPage() {
         pdfplumber によるテキスト抽出(テキスト層がない場合はOCR)が自動実行され、下の「抽出結果」に下書きが入ります。
       </DemoNote>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="登録PDF総数" value={`${num(1247)} 件`} sub="Supabase Storage に保存" />
         <Stat label="未確認 / 要修正" value={`${unreviewed} 件`} sub="人による確認待ち" />
         <Stat label="自動抽出の成功率" value="92.4%" sub="銘柄コードの自動判定精度" />
@@ -92,7 +92,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* ---------- アップロード領域 ---------- */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="アップロード"
           description="複数ファイルをまとめて登録できます。ファイル名からも銘柄コードを推定します。"
@@ -117,7 +117,7 @@ export default function DocumentsPage() {
         </CardBody>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-5">
         {/* ---------- 一覧 ---------- */}
         <Card className="lg:col-span-3">
           <CardHeader

@@ -9,10 +9,10 @@
 // ・未ログインの場合はログイン画面へ戻します
 // ============================================================
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Logo from "./logo";
 import { ALL_NAV_ITEMS, NAV_GROUPS, PHASE_LABEL } from "./nav-items";
 import { ERROR_LOGS, TODAY } from "@/lib/mock-data";
 import { session } from "@/lib/session";
@@ -36,7 +36,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     const ok = session.isAuthed();
     setAuthed(ok);
-    if (!ok) router.replace("/");
+    if (!ok) router.replace("/login");
   }, [router, pathname]);
 
   // ---- ⌘K / Ctrl+K で検索 ----
@@ -72,12 +72,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
   if (!authed) return null;
 
-  const nav = (compact: boolean) => (
+  /**
+   * サイドバーのナビゲーション
+   * dark = 濃い背景(PC用サイドバー)向けの配色
+   */
+  const nav = (compact: boolean, dark = true) => (
     <nav className="flex flex-col gap-5">
       {NAV_GROUPS.map((g) => (
         <div key={g.group}>
           {!compact && (
-            <p className="mb-2 px-3 text-[10.5px] font-semibold uppercase tracking-wider text-ink-400">
+            <p
+              className={cx(
+                "mb-2 px-3 text-[10.5px] font-semibold uppercase tracking-wider",
+                dark ? "text-slate-500" : "text-ink-400"
+              )}
+            >
               {g.group}
             </p>
           )}
@@ -93,15 +102,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition",
                       compact && "justify-center px-2",
                       active
-                        ? "bg-accent text-white shadow-sm"
-                        : "text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+                        ? "bg-accent text-white shadow-sm shadow-accent/30"
+                        : dark
+                          ? "text-slate-300 hover:bg-white/10 hover:text-white"
+                          : "text-ink-600 hover:bg-ink-100 hover:text-ink-900"
                     )}
                   >
                     <span
                       aria-hidden
                       className={cx(
                         "w-4 shrink-0 text-center text-[13px]",
-                        active ? "text-white" : "text-ink-400"
+                        active
+                          ? "text-white"
+                          : dark
+                            ? "text-slate-500 group-hover:text-slate-300"
+                            : "text-ink-400"
                       )}
                     >
                       {item.icon}
@@ -115,8 +130,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
                             active
                               ? "bg-white/20 text-white"
                               : item.phase === 1
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-ink-100 text-ink-400"
+                                ? dark
+                                  ? "bg-emerald-400/15 text-emerald-300"
+                                  : "bg-emerald-100 text-emerald-700"
+                                : dark
+                                  ? "bg-white/5 text-slate-500"
+                                  : "bg-ink-100 text-ink-400"
                           )}
                         >
                           {item.phase === 1 ? "MVP" : `第${item.phase}段階`}
@@ -138,14 +157,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* ---------- モバイル用ヘッダー ---------- */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Image
-            src="/分析ロゴ.png"
-            alt="日本株分析システム"
-            width={28}
-            height={28}
-            priority
-            className="h-7 w-7 shrink-0 rounded-md object-cover object-top"
-          />
+          <Logo size={30} rounded="rounded-md" priority />
           <span className="text-[14px] font-bold tracking-tight text-ink-900">
             日本株分析システム
           </span>
@@ -163,7 +175,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       {menuOpen && (
         <div className="border-b border-ink-200 bg-white px-4 py-4 lg:hidden">
-          {nav(false)}
+          {nav(false, false)}
           <button
             onClick={logout}
             className="mt-4 w-full rounded-lg border border-ink-200 px-3 py-2 text-[13px] text-ink-600 hover:bg-ink-50"
@@ -173,11 +185,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <div className="mx-auto flex max-w-[1700px]">
-        {/* ---------- PC用サイドバー ---------- */}
+      <div>
+        {/* ---------- PC用サイドバー(画面に固定・スクロールしません) ---------- */}
         <aside
           className={cx(
-            "sticky top-0 hidden h-screen shrink-0 flex-col border-r border-ink-200 bg-white py-5 transition-[width] duration-200 lg:flex",
+            "fixed inset-y-0 left-0 z-30 hidden flex-col bg-slate-800 py-5 shadow-xl transition-[width] duration-200 lg:flex",
             collapsed ? "w-[76px] px-3" : "w-[264px] px-4"
           )}
         >
@@ -188,20 +200,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
               collapsed ? "justify-center px-0" : "px-2"
             )}
           >
-            <Image
-              src="/分析ロゴ.png"
-              alt="日本株分析システム"
-              width={36}
-              height={36}
-              priority
-              className="h-9 w-9 shrink-0 rounded-lg object-cover object-top"
-            />
+            <Logo size={38} priority />
             {!collapsed && (
-              <span>
-                <span className="block text-[14.5px] font-bold leading-tight tracking-tight text-ink-900">
+              <span className="min-w-0">
+                <span className="block truncate text-[14.5px] font-bold leading-tight tracking-tight text-white">
                   日本株分析システム
                 </span>
-                <span className="block text-[11px] text-ink-400">
+                <span className="block text-[11px] text-slate-400">
                   J-Quants Premium 連携
                 </span>
               </span>
@@ -211,23 +216,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
           {!collapsed && (
             <button
               onClick={() => setPaletteOpen(true)}
-              className="mb-5 flex w-full items-center gap-2 rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 text-[12.5px] text-ink-400 transition hover:border-ink-300 hover:bg-white"
+              className="mb-5 flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[12.5px] text-slate-400 transition hover:border-white/20 hover:bg-white/10 hover:text-slate-200"
             >
               <span aria-hidden>⌕</span>
               <span className="flex-1 text-left">画面を検索…</span>
-              <kbd className="rounded border border-ink-200 bg-white px-1.5 py-0.5 text-[10px] text-ink-400">
+              <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-400">
                 ⌘K
               </kbd>
             </button>
           )}
 
-          <div className="flex-1 overflow-y-auto">{nav(collapsed)}</div>
+          {/* ナビ本体。項目が増えた場合のみ内部でスクロールします */}
+          <div className="min-h-0 flex-1 overflow-y-auto">{nav(collapsed)}</div>
 
-          <div className="mt-4 border-t border-ink-200 pt-4">
+          <div className="mt-4 border-t border-white/10 pt-4">
             <button
               onClick={() => setCollapsed((v) => !v)}
               className={cx(
-                "mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[12px] text-ink-400 transition hover:bg-ink-100 hover:text-ink-600",
+                "mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[12px] text-slate-400 transition hover:bg-white/10 hover:text-slate-200",
                 collapsed && "justify-center px-0"
               )}
             >
@@ -241,20 +247,20 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 collapsed ? "justify-center px-0" : "px-2"
               )}
             >
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink-100 text-[12px] font-semibold text-ink-500">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 text-[12px] font-semibold text-slate-300">
                 管
               </span>
               {!collapsed && (
                 <>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[12.5px] font-medium text-ink-700">
+                    <span className="block truncate text-[12.5px] font-medium text-slate-200">
                       管理者
                     </span>
-                    <span className="block text-[11px] text-ink-400">{TODAY}</span>
+                    <span className="block text-[11px] text-slate-500">{TODAY}</span>
                   </span>
                   <button
                     onClick={logout}
-                    className="rounded px-1.5 py-1 text-[11px] text-ink-400 transition hover:bg-ink-100 hover:text-ink-600"
+                    className="rounded px-1.5 py-1 text-[11px] text-slate-400 transition hover:bg-white/10 hover:text-slate-200"
                   >
                     ログアウト
                   </button>
@@ -264,10 +270,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        {/* ---------- メイン ---------- */}
-        <div className="min-w-0 flex-1">
+        {/* ---------- メイン(サイドバーの幅だけ左に余白を取ります) ---------- */}
+        <div
+          className={cx(
+            "min-w-0 transition-[padding] duration-200",
+            collapsed ? "lg:pl-[76px]" : "lg:pl-[264px]"
+          )}
+        >
           {/* 上部バー(PCのみ) */}
-          <div className="sticky top-0 z-20 hidden items-center gap-4 border-b border-ink-200 bg-white/85 px-8 py-3 backdrop-blur lg:flex">
+          <div className="sticky top-0 z-20 hidden items-center gap-4 border-b border-ink-200/70 bg-white/75 px-8 py-3.5 backdrop-blur-md lg:flex">
             <nav className="flex min-w-0 items-center gap-1.5 text-[12.5px]">
               <Link href="/dashboard" className="text-ink-400 hover:text-ink-700">
                 管理画面
@@ -363,7 +374,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <main className="px-4 py-6 sm:px-6 lg:px-8 lg:py-7">{children}</main>
+          <main className="mx-auto max-w-[1400px] px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
+            {children}
+          </main>
         </div>
       </div>
 

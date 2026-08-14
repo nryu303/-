@@ -125,7 +125,7 @@ export default function RecordsPage() {
         入力フォームは表示のみで、保存は行いません。本番では入力内容が Supabase に保存され、下の集計へ即時反映されます。
       </DemoNote>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat
           label="通算損益(決済済)"
           value={yen(totalPnl)}
@@ -144,7 +144,7 @@ export default function RecordsPage() {
 
       {/* ---------- 登録フォーム ---------- */}
       {showForm && (
-        <Card className="mb-5">
+        <Card className="mb-6">
           <CardHeader
             title="実績の登録"
             description="抽出結果から銘柄を選ぶと、判定理由と予測損益率が自動で引き継がれます。"
@@ -208,7 +208,7 @@ export default function RecordsPage() {
       )}
 
       {/* ---------- 実績一覧 ---------- */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="売買実績の一覧"
           description="判定理由もあわせて保存されるため、後から「なぜこの銘柄を選んだか」を振り返れます。"
@@ -290,7 +290,7 @@ export default function RecordsPage() {
         </Table>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* ---------- 月別集計 ---------- */}
         <Card>
           <CardHeader

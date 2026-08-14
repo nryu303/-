@@ -140,7 +140,7 @@ export default function BacktestPage() {
       </DemoNote>
 
       {/* ---------- 実行条件 ---------- */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="実行条件"
           description="対象銘柄群・売買タイミング・コストを指定します。手数料とスリッページ(価格差)も反映されます。"
@@ -219,7 +219,7 @@ export default function BacktestPage() {
       {phase !== "running" && (
         <>
           {/* ---------- サマリー ---------- */}
-          <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Stat
               label="総損益"
               value={yen(current.totalPnl)}
@@ -245,7 +245,7 @@ export default function BacktestPage() {
           </div>
 
           {/* ---------- 保有期間別の比較 ---------- */}
-          <Card className="mb-5">
+          <Card className="mb-6">
             <CardHeader
               title="保有期間別の一括比較"
               description="同じ銘柄群・同じ売買条件で、保有期間だけを変えた結果を横並びで比較します。行をクリックすると上部のサマリーが切り替わります。"
@@ -324,7 +324,7 @@ export default function BacktestPage() {
           </Card>
 
           {/* ---------- 資産推移 ---------- */}
-          <Card className="mb-5">
+          <Card className="mb-6">
             <CardHeader
               title="累積損益の推移"
               description={`保有期間 ${current.holdingDays}営業日 の場合の月次累積損益です。`}
@@ -335,7 +335,7 @@ export default function BacktestPage() {
           </Card>
 
           {/* ---------- 切り口別の成績 ---------- */}
-          <div className="mb-5 grid gap-5 lg:grid-cols-3">
+          <div className="mb-6 grid gap-6 lg:grid-cols-3">
             <Breakdown title="市場別の成績" rows={BACKTEST_BY_MARKET} />
             <Breakdown title="期間別の成績" rows={BACKTEST_BY_PERIOD} />
             <Breakdown
@@ -345,7 +345,7 @@ export default function BacktestPage() {
             />
           </div>
 
-          <Card className="mb-5">
+          <Card className="mb-6">
             <CardHeader
               title="業種別の成績(全業種)"
               description="どの業種でこの戦略が機能しているかを確認できます。"

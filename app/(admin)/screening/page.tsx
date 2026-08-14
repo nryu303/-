@@ -169,7 +169,7 @@ export default function ScreeningPage() {
       </DemoNote>
 
       {/* ---------- 保存済みテンプレート ---------- */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="保存済みの抽出条件"
           description="よく使う条件はテンプレートとして保存し、ワンクリックで呼び出せます。"
@@ -214,7 +214,7 @@ export default function ScreeningPage() {
       </Card>
 
       {/* ---------- 条件ビルダー ---------- */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title={`条件の内訳 — ${template.name}`}
           description="条件は1行ずつ追加・削除できます。項目・演算子・値をあとから変更できる設計です。"
@@ -274,7 +274,7 @@ export default function ScreeningPage() {
       </Card>
 
       {/* ---------- 絞り込み(実動作) ---------- */}
-      <Card className="mb-5">
+      <Card className="mb-6">
         <CardHeader
           title="絞り込み"
           description="この画面のフィルタは実際に動作します。値を変えて結果の変化をご確認ください。"
